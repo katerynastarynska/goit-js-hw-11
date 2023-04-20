@@ -24,15 +24,11 @@ let perPage = 40;
 // function fetchImages(e) {
 //     e.preventDefault();
 //     imageToFind = inputEl.value;
-//     console.log(imageToFind);
 
 //    const url = `https://pixabay.com/api/?key=35341635-e8056e87c32d0b59c4040edf5&q=${imageToFind}=cat&orientation=horizontal&image_type=photo&safesearch=true&per_page=${perPage}&page=${currentPage}`
 //     fetch(url)
 //         .then(r => r.json())
 //         .then((data) => {
-//             //             if (e.type === 'submit') {
-//             // очистить поиск
-//             //             }
 //             if (data.totalHits === 0) {
 //                 notificationError();
 //                 return;
@@ -42,7 +38,7 @@ let perPage = 40;
 //             }
 
 //             console.log('data', data.totalHits)
-
+// }
 //             currentPage += 1;
 
 //             if (currentPage > Math.ceil(data.totalHits / perPage)) {
@@ -152,7 +148,6 @@ function galleryRenderMarkup(items) {
       </div>
       `
     }).join('')
-
 
     imageGallery.innerHTML = markup;
 
