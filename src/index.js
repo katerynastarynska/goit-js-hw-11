@@ -3,6 +3,11 @@ import axios from 'axios';
 console.log(axios)
 import Notiflix from 'notiflix';
 console.log(Notiflix)
+import SimpleLightbox from "simplelightbox";
+console.log(SimpleLightbox);
+import "simplelightbox/dist/simple-lightbox.min.css";
+
+
 
 const formEl = document.querySelector('.search-form');
 const inputEl = document.querySelector('input');
@@ -130,19 +135,29 @@ function notificationError() {
 function notificationErrorMessage() {
     Notiflix.Notify.failure("Someting went wrong :(");
 }
+
 function galleryRenderMarkup(items) {
     console.log('>>>', items);
+
     const markup = items?.hits?.map((item) => {
         return `<div class="photo-card">
-        <img src="${item.webformatURL}" alt="${item.tags}" loading="lazy" />
+        <a href="${item.largeImageURL}"
+          ><img src="${item.webformatURL}" alt="${item.tags}" loading="lazy"/></a>
         <div class="info-card">
           <p class="info-item"><b>Likes </b>${item.likes}</p>
           <p class="info-item"><b>Views </b>${item.views}</p>
           <p class="info-item"><b>Comments </b>${item.comments}</p>
           <p class="info-item"><b>Downloads </b>${item.downloads}</p>
         </div>
-      </div>`
-    }).join('');
-    imageGallery.innerHTML = markup;
-}
+      </div>
+      `
+    }).join('')
 
+
+    imageGallery.innerHTML = markup;
+
+    const lightbox = new SimpleLightbox('.gallery a');
+    console.log('>>>>> light box >>>> ', lightbox.elements)
+
+    lightbox.on('show.simplelightbox')
+}
