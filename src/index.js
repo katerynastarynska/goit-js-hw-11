@@ -1,25 +1,25 @@
 import './css/styles.css';
 import axios from 'axios';
-console.log(axios)
 import Notiflix from 'notiflix';
-console.log(Notiflix)
 import SimpleLightbox from "simplelightbox";
-console.log(SimpleLightbox);
 import "simplelightbox/dist/simple-lightbox.min.css";
-
-
+import throttle from 'lodash.throttle';
 
 const formEl = document.querySelector('.search-form');
 const inputEl = document.querySelector('input');
 const imageGallery = document.querySelector('.gallery');
-const loadMoreBtn = document.querySelector('.load-more');
+// const loadMoreBtn = document.querySelector('.load-more');
+const toTopBtn = document.querySelector('.top');
 
 formEl.addEventListener('submit', onSearchBtnHandler);
-loadMoreBtn.addEventListener('click', onLoadMoreBtnHandler);
+window.addEventListener('scroll', throttle(handleInfiniteScroll, 500));
+// loadMoreBtn.addEventListener('click',  smoothScrollGallery);
+toTopBtn.addEventListener('click', onTopBtnScroll);
 
 let imageToFind = '';
 let currentPage = 1;
 let perPage = 40;
+
 /////
 // function fetchImages(e) {
 //     e.preventDefault();
@@ -64,7 +64,6 @@ async function fetchImages() {
 
     try {
         const response = await axios.get(url);
-        console.log(response);
         if (response?.status !== 200 || !response || !response.status) {
             notificationErrorMessage();
             throw new Error(response.status);
@@ -85,36 +84,39 @@ async function onSearchBtnHandler(e) {
         if (data.totalHits === 0) {
             notificationError();
             imageGallery.innerHTML = "";
-            loadMoreBtn.classList.add("hide");
+            // loadMoreBtn.classList.add("hide");
             return;
-        } else {
-            loadMoreBtn.classList.remove("hide");
         }
+        // else {
+        //     loadMoreBtn.classList.remove("hide");
+        // }
         if (currentPage === 1) {
             notificationSuccess(data);
         }
         galleryRenderMarkup(data);
+
     } catch (error) {
         console.log("unable to get search images", error);
     }
 }
 
-async function onLoadMoreBtnHandler() {
-    currentPage += 1;
+// async function onLoadMoreBtnHandler() {
+//     currentPage += 1;
 
-    try {
-        const data = await fetchImages();
+//     try {
+//         const data = await fetchImages();
 
-        if (currentPage > Math.ceil(data.totalHits / perPage)) {
-            loadMoreBtn.classList.add('hide');
-            console.log(loadMoreBtn);
-            notificationFaillure();
-        }
-        galleryRenderMarkup(data)
-    } catch (error) {
-        console.log("unable to load more images", error);
-    }
-}
+//         if (currentPage > Math.ceil(data.totalHits / perPage)) {
+//             loadMoreBtn.classList.add('hide');
+//             console.log(loadMoreBtn);
+//             notificationFaillure();
+//         }
+//         galleryRenderMarkup(data);
+
+//     } catch (error) {
+//         console.log("unable to load more images", error);
+//     }
+// }
 
 function resetPage() {
     currentPage = 1;
@@ -138,7 +140,8 @@ function galleryRenderMarkup(items) {
     const markup = items?.hits?.map((item) => {
         return `<div class="photo-card">
         <a href="${item.largeImageURL}"
-          ><img src="${item.webformatURL}" alt="${item.tags}" loading="lazy"/></a>
+          ><img class="photo-card__img" src="${item.webformatURL}" alt="${item.tags}" loading="lazy" width="320"
+          height="212"/></a>
         <div class="info-card">
           <p class="info-item"><b>Likes </b>${item.likes}</p>
           <p class="info-item"><b>Views </b>${item.views}</p>
@@ -149,19 +152,42 @@ function galleryRenderMarkup(items) {
       `
     }).join('')
 
-    imageGallery.innerHTML = markup;
+    imageGallery.innerHTML += markup;
 
     const lightbox = new SimpleLightbox('.gallery a');
-    console.log('>>>>> light box >>>> ', lightbox.elements)
-
-    lightbox.on('show.simplelightbox')
+    lightbox.on('show.simplelightbox');
 }
 
+async function onLoadMoreHandler() {
 
-const { height: cardHeight } = document.querySelector(".gallery")
-  .firstElementChild.getBoundingClientRect();
+    try {
+        const data = await fetchImages();
+        console.log('>>>> data ', data.total);
 
-window.scrollBy({
-  top: cardHeight * 2,
-  behavior: "smooth",
-});
+        if (currentPage > Math.ceil(data.totalHits / perPage)) {
+            notificationFaillure();
+            return;
+        }
+        galleryRenderMarkup(data);
+    } catch (error) {
+        console.log("unable to load more images", error);
+    }
+}
+
+async function handleInfiniteScroll() {
+    const scrolled = window.pageYOffset;
+    const { height } = imageGallery.firstElementChild.getBoundingClientRect();
+    scrolled > height ? toTopBtn.classList.remove('hide') : toTopBtn.classList.add('hide');
+  
+    const endOfPage = window.innerHeight + scrolled >= document.body.offsetHeight;
+    if (endOfPage) {
+        await onLoadMoreHandler(currentPage += 1);
+    }
+};
+
+function onTopBtnScroll() {
+    window.scrollTo({
+        top: 0,
+        behavior: 'smooth',
+    })
+}
